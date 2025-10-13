@@ -1,0 +1,22 @@
+mysql> CREATE DATABASE subscription_cms;
+mysql> USE subscription_cms;
+mysql> SOURCE C:/workspace/SQL-Project--Subscription-Based-Content-Management-System/sql project.sql;
+---
+Tables:
+
+Users → user accounts (James Davis, Sophia Anderson, etc.)
+
+Subscriptions → Basic, Standard, Gold, Platinum, Executive
+
+UserSubscriptions → which user has which subscription and validity dates
+
+Categories → Technology, Health & Wellness, Finance, Travel, Education
+
+Content → sample articles/content mapped to categories
+
+Payments → subscription payment history
+
+ContentAccess → which user accessed which content
+
+---
+ER DIAGRAM:

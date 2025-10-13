@@ -1,0 +1,416 @@
+{
+	"info": {
+		"_postman_id": "subscription-api-collection",
+		"name": "Subscription System API",
+		"description": "Complete API collection for the subscription management system",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register New User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"register"
+							]
+						},
+						"description": "Register a new user account. Email must be unique. Returns 409 if email already exists."
+					}
+				},
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"login"
+							]
+						},
+						"description": "Login existing user. Requires exact name and email match from registration. Returns 401 if credentials don't match."
+					}
+				}
+			],
+			"description": "User authentication endpoints - separate login and registration"
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						},
+						"description": "Get list of all users ordered by creation date"
+					}
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{userId}}"
+							]
+						},
+						"description": "Get specific user by ID"
+					}
+				}
+			],
+			"description": "User management endpoints - admin operations"
+		},
+		{
+			"name": "Plans",
+			"item": [
+				{
+					"name": "Get All Plans",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/plans",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"plans"
+							]
+						},
+						"description": "Get all subscription plans ordered by price"
+					}
+				},
+				{
+					"name": "Get Plan by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/plans/{{planId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"plans",
+								"{{planId}}"
+							]
+						},
+						"description": "Get specific plan by ID"
+					}
+				},
+				{
+					"name": "Create Plan",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Premium Plan\",\n  \"price_cents\": 99900,\n  \"interval\": \"monthly\",\n  \"description\": \"Full access to all premium features\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/plans",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"plans"
+							]
+						},
+						"description": "Create a new subscription plan"
+					}
+				},
+				{
+					"name": "Update Plan",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Premium Plan Updated\",\n  \"price_cents\": 109900,\n  \"interval\": \"monthly\",\n  \"description\": \"Updated premium plan with more features\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/plans/{{planId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"plans",
+								"{{planId}}"
+							]
+						},
+						"description": "Update an existing plan"
+					}
+				},
+				{
+					"name": "Delete Plan",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/plans/{{planId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"plans",
+								"{{planId}}"
+							]
+						},
+						"description": "Delete a plan by ID"
+					}
+				}
+			],
+			"description": "Subscription plan management endpoints"
+		},
+		{
+			"name": "Subscriptions",
+			"item": [
+				{
+					"name": "Create Subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": {{userId}},\n  \"plan_id\": {{planId}},\n  \"status\": \"active\",\n  \"months\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/subscriptions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"subscriptions"
+							]
+						},
+						"description": "Create a new subscription for a user"
+					}
+				},
+				{
+					"name": "Get All Subscriptions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/subscriptions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"subscriptions"
+							]
+						},
+						"description": "Get all subscriptions with user and plan details"
+					}
+				},
+				{
+					"name": "Get Subscription by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/subscriptions/{{subscriptionId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"subscriptions",
+								"{{subscriptionId}}"
+							]
+						},
+						"description": "Get specific subscription by ID"
+					}
+				},
+				{
+					"name": "Cancel Subscription",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/subscriptions/{{subscriptionId}}/cancel",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"subscriptions",
+								"{{subscriptionId}}",
+								"cancel"
+							]
+						},
+						"description": "Cancel an active subscription"
+					}
+				}
+			],
+			"description": "Subscription management endpoints"
+		},
+		{
+			"name": "Payments",
+			"item": [
+				{
+					"name": "Process Payment & Create Subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": {{userId}},\n  \"plan_id\": {{planId}},\n  \"payment_method\": \"credit_card\",\n  \"amount_cents\": 64900\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments"
+							]
+						},
+						"description": "Process payment for a subscription plan"
+					}
+				},
+				{
+					"name": "Get Payment History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments"
+							]
+						},
+						"description": "Get all payment transactions with user and plan details"
+					}
+				}
+			],
+			"description": "Payment processing and history endpoints"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:4000/api",
+			"type": "string",
+			"description": "Base URL for the API server"
+		},
+		{
+			"key": "userId",
+			"value": "1",
+			"type": "string",
+			"description": "Sample user ID for testing"
+		},
+		{
+			"key": "planId",
+			"value": "1",
+			"type": "string",
+			"description": "Sample plan ID for testing (Basic plan)"
+		},
+		{
+			"key": "subscriptionId",
+			"value": "1",
+			"type": "string",
+			"description": "Sample subscription ID for testing"
+		},
+		{
+			"key": "testUserName",
+			"value": "Alice Smith",
+			"type": "string",
+			"description": "Test user name for authentication"
+		},
+		{
+			"key": "testUserEmail",
+			"value": "alice.smith@example.com",
+			"type": "string",
+			"description": "Test user email for authentication"
+		}
+	]
+}
