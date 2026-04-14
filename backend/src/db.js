@@ -1,11 +1,30 @@
-const mysql = require('mysql2/promise');
-const pool = mysql.createPool({
+const { Pool, Client } = require('pg');
+
+const DEFAULT_DB_CONFIG = {
   host: process.env.DB_HOST || '127.0.0.1',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASS || 'mysql',
-  database: process.env.DB_NAME || 'netflix_clone',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASS || 'postgres'
+};
+
+const pool = new Pool({
+  ...DEFAULT_DB_CONFIG,
+  database: process.env.DB_NAME || 'netflix_clone'
 });
-module.exports = pool;
+
+function createAdminClient(overrides = {}) {
+  return new Client({
+    ...DEFAULT_DB_CONFIG,
+    database: overrides.database || 'postgres'
+  });
+}
+
+async function query(text, params) {
+  return pool.query(text, params);
+}
+
+module.exports = {
+  pool,
+  query,
+  createAdminClient
+};

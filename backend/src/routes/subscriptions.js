@@ -8,27 +8,37 @@ router.post('/', async (req,res)=>{
   if(!user_id || !plan_id) return res.status(400).json({error:'user_id and plan_id required'});
   
   // Validate user exists
-  const [userRows] = await db.query('SELECT id FROM users WHERE id=?', [user_id]);
-  if(!userRows.length) return res.status(404).json({error:'User not found'});
+  const userResult = await db.query('SELECT id FROM users WHERE id=$1', [user_id]);
+  if(!userResult.rows.length) return res.status(404).json({error:'User not found'});
   
   // Validate plan exists
-  const [planRows] = await db.query('SELECT id FROM plans WHERE id=?', [plan_id]);
-  if(!planRows.length) return res.status(404).json({error:'Plan not found'});
+  const planResult = await db.query('SELECT id FROM plans WHERE id=$1', [plan_id]);
+  if(!planResult.rows.length) return res.status(404).json({error:'Plan not found'});
+  
+  // Check for existing active subscription for this plan
+  const existingSubResult = await db.query(
+    'SELECT id FROM subscriptions WHERE user_id=$1 AND plan_id=$2 AND status=$3',
+    [user_id, plan_id, 'active']
+  );
+  
+  if(existingSubResult.rows.length > 0) {
+    return res.status(409).json({error:'You already have an active subscription for this plan. Please cancel it first if you want to change plans.'});
+  }
   
   const started = new Date().toISOString().slice(0,10);
   const d = new Date();
   d.setMonth(d.getMonth()+months);
   const ends = d.toISOString().slice(0,10);
-  const [r] = await db.query('INSERT INTO subscriptions (user_id,plan_id,status,started_at,ends_at) VALUES (?,?,?,?,?)',
+  
+  const result = await db.query('INSERT INTO subscriptions (user_id,plan_id,status,started_at,ends_at) VALUES ($1,$2,$3,$4,$5) RETURNING *',
     [user_id, plan_id, status, started, ends]);
-  const [rows] = await db.query('SELECT * FROM subscriptions WHERE id=?', [r.insertId]);
-  res.status(201).json(rows[0]);
+  res.status(201).json(result.rows[0]);
 });
 
 // list subscriptions with plan details
 router.get('/', async (req,res)=>{
   try {
-    const [rows] = await db.query(`
+    const result = await db.query(`
       SELECT s.*, 
              u.name as user_name, u.email,
              p.name as plan_name, p.price_cents
@@ -37,7 +47,7 @@ router.get('/', async (req,res)=>{
       JOIN plans p ON s.plan_id = p.id  
       ORDER BY s.created_at DESC
     `);
-    res.json(rows);
+    res.json(result.rows);
   } catch (error) {
     console.error('Error fetching subscriptions:', error);
     res.status(500).json({error: 'Database error'});
@@ -46,16 +56,16 @@ router.get('/', async (req,res)=>{
 
 // get by id
 router.get('/:id', async (req,res)=>{
-  const [rows] = await db.query('SELECT * FROM subscriptions WHERE id=?', [req.params.id]);
-  if(!rows.length) return res.status(404).json({error:'not found'});
-  res.json(rows[0]);
+  const result = await db.query('SELECT * FROM subscriptions WHERE id=$1', [req.params.id]);
+  if(!result.rows.length) return res.status(404).json({error:'not found'});
+  res.json(result.rows[0]);
 });
 
 // cancel subscription
 router.post('/:id/cancel', async (req,res)=>{
-  await db.query('UPDATE subscriptions SET status=? WHERE id=?', ['cancelled', req.params.id]);
-  const [rows]= await db.query('SELECT * FROM subscriptions WHERE id=?', [req.params.id]);
-  res.json(rows[0]);
+  await db.query('UPDATE subscriptions SET status=$1 WHERE id=$2', ['cancelled', req.params.id]);
+  const result = await db.query('SELECT * FROM subscriptions WHERE id=$1', [req.params.id]);
+  res.json(result.rows[0]);
 });
 
 module.exports = router;

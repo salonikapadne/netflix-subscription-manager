@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 const API = process.env.REACT_APP_API || 'http://localhost:4000/api';
 
 // Static Netflix plans
@@ -34,6 +34,25 @@ export default function Plans({ user }){
   const [form, setForm]=useState({user_id: user.id, plan_id:'', months:1});
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [userSubscriptions, setUserSubscriptions] = useState([]);
+  
+  useEffect(() => {
+    fetchUserSubscriptions();
+  }, []);
+  
+  const fetchUserSubscriptions = async () => {
+    try {
+      const subsData = await fetch(API+'/subscriptions').then(r=>r.json());
+      const userSubs = subsData.filter(sub => sub.user_id === user.id && sub.status === 'active');
+      setUserSubscriptions(userSubs);
+    } catch (error) {
+      console.error('Failed to fetch subscriptions:', error);
+    }
+  };
+  
+  const hasActivePlanSubscription = (planId) => {
+    return userSubscriptions.some(sub => sub.plan_id === planId);
+  };
   
   const calculateTotal = () => {
     if (!selectedPlan || !form.months) return 0;
@@ -41,6 +60,10 @@ export default function Plans({ user }){
   };
   
   const handlePlanSelect = (plan) => {
+    if (hasActivePlanSubscription(plan.id)) {
+      alert(`You already have an active ${plan.name} subscription. Please cancel it first if you want to resubscribe.`);
+      return;
+    }
     setSelectedPlan(plan);
     setForm({...form, plan_id: plan.id});
   };
@@ -65,6 +88,7 @@ export default function Plans({ user }){
         alert(`🎉 Subscription created successfully!\n\nPlan: ${selectedPlan.name}\nDuration: ${form.months} month${form.months > 1 ? 's' : ''}\nTotal Paid: ₹${calculateTotal().toFixed(2)}\n\nEnjoy your Netflix subscription!`);
         setForm({user_id: user.id, plan_id:'', months:1});
         setSelectedPlan(null);
+        fetchUserSubscriptions();
       } else {
         const error = await res.json();
         alert('Error: ' + error.error);
@@ -87,15 +111,16 @@ export default function Plans({ user }){
         <div 
           key={p.id} 
           style={{
-            border: selectedPlan?.id === p.id ? '3px solid #e50914' : '2px solid #ddd',
+            border: selectedPlan?.id === p.id ? '3px solid #e50914' : hasActivePlanSubscription(p.id) ? '2px solid #28a745' : '2px solid #ddd',
             borderRadius: '12px',
             padding: '24px',
-            cursor: 'pointer',
-            backgroundColor: selectedPlan?.id === p.id ? '#fff5f5' : 'white',
+            cursor: hasActivePlanSubscription(p.id) ? 'not-allowed' : 'pointer',
+            backgroundColor: selectedPlan?.id === p.id ? '#fff5f5' : hasActivePlanSubscription(p.id) ? '#f0f8f5' : 'white',
             transition: 'all 0.3s ease',
-            boxShadow: selectedPlan?.id === p.id ? '0 8px 25px rgba(229,9,20,0.15)' : '0 2px 10px rgba(0,0,0,0.1)',
+            boxShadow: selectedPlan?.id === p.id ? '0 8px 25px rgba(229,9,20,0.15)' : hasActivePlanSubscription(p.id) ? '0 2px 10px rgba(40,167,69,0.1)' : '0 2px 10px rgba(0,0,0,0.1)',
             transform: selectedPlan?.id === p.id ? 'translateY(-2px)' : 'none',
-            position: 'relative'
+            position: 'relative',
+            opacity: hasActivePlanSubscription(p.id) ? 0.9 : 1
           }}
           onClick={() => handlePlanSelect(p)}
         >
@@ -115,8 +140,24 @@ export default function Plans({ user }){
             </div>
           )}
           
+          {hasActivePlanSubscription(p.id) && (
+            <div style={{
+              position: 'absolute',
+              top: '-8px',
+              left: '20px',
+              background: '#28a745',
+              color: 'white',
+              padding: '4px 12px',
+              borderRadius: '12px',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}>
+              ACTIVE
+            </div>
+          )}
+          
           <div style={{textAlign:'center'}}>
-            <h3 style={{margin:'0 0 12px 0', color: selectedPlan?.id === p.id ? '#e50914' : '#333', fontSize:'24px'}}>
+            <h3 style={{margin:'0 0 12px 0', color: selectedPlan?.id === p.id ? '#e50914' : hasActivePlanSubscription(p.id) ? '#28a745' : '#333', fontSize:'24px'}}>
               {p.name}
             </h3>
             <div style={{fontSize:'32px', fontWeight:'bold', color:'#333', marginBottom:'8px'}}>
@@ -147,6 +188,20 @@ export default function Plans({ user }){
                 fontWeight:'bold'
               }}>
                 ✓ Selected Plan
+              </div>
+            )}
+            
+            {hasActivePlanSubscription(p.id) && (
+              <div style={{
+                marginTop:'16px', 
+                padding:'12px', 
+                backgroundColor:'#28a745', 
+                color:'white', 
+                borderRadius:'8px', 
+                textAlign:'center',
+                fontWeight:'bold'
+              }}>
+                ✓ Currently Active
               </div>
             )}
           </div>

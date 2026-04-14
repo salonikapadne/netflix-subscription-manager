@@ -5,19 +5,16 @@ async function setupDatabase() {
     console.log('Setting up database...');
     
     // Clean up all tables in correct order (due to foreign key constraints)
-    await db.query('DELETE FROM subscriptions'); // Delete subscriptions first
-    await db.query('ALTER TABLE subscriptions AUTO_INCREMENT = 1');
-    console.log('Cleared subscriptions and reset ID counter');
+    await db.query('TRUNCATE TABLE subscriptions CASCADE');
+    console.log('Cleared subscriptions');
     
-    // Clear existing plans and reset auto-increment
-    await db.query('DELETE FROM plans');
-    await db.query('ALTER TABLE plans AUTO_INCREMENT = 1');
-    console.log('Cleared existing plans and reset ID counter');
+    // Clear existing plans
+    await db.query('TRUNCATE TABLE plans CASCADE');
+    console.log('Cleared existing plans');
     
-    // Clear users and reset auto-increment
-    await db.query('DELETE FROM users');
-    await db.query('ALTER TABLE users AUTO_INCREMENT = 1');
-    console.log('Cleared users and reset ID counter');
+    // Clear users
+    await db.query('TRUNCATE TABLE users CASCADE');
+    console.log('Cleared users');
     
     // Insert seed plans
     const plans = [
@@ -27,30 +24,30 @@ async function setupDatabase() {
     ];
     
     for (const [name, price_cents, interval, description] of plans) {
-      await db.query('INSERT INTO plans (name, price_cents, `interval`, description) VALUES (?, ?, ?, ?)', 
+      await db.query('INSERT INTO plans (name, price_cents, interval, description) VALUES ($1, $2, $3, $4)', 
         [name, price_cents, interval, description]);
       console.log(`Inserted plan: ${name}`);
     }
     
     // Add test user
-    await db.query('INSERT INTO users (name, email) VALUES (?, ?)', 
+    await db.query('INSERT INTO users (name, email) VALUES ($1, $2)', 
       ['Test User', 'test@example.com']);
     console.log('Added test user with ID 1');
     
     // Show current data
-    const [plans_result] = await db.query('SELECT * FROM plans ORDER BY id');
-    const [users_result] = await db.query('SELECT * FROM users ORDER BY id');
-    const [subs_result] = await db.query('SELECT * FROM subscriptions ORDER BY id');
+    const plans_result = await db.query('SELECT * FROM plans ORDER BY id');
+    const users_result = await db.query('SELECT * FROM users ORDER BY id');
+    const subs_result = await db.query('SELECT * FROM subscriptions ORDER BY id');
     
     console.log('\nCurrent Plans:');
-    console.table(plans_result);
+    console.table(plans_result.rows);
     console.log('\nCurrent Users:');
-    console.table(users_result);
+    console.table(users_result.rows);
     console.log('\nCurrent Subscriptions:');
-    console.table(subs_result);
+    console.table(subs_result.rows);
     
     console.log('\n✅ Database setup completed successfully!');
-    console.log('📋 All tables now start with ID = 1');
+    console.log('📋 All tables use PostgreSQL SERIAL auto-increment');
     process.exit(0);
   } catch (error) {
     console.error('Setup error:', error.message);

@@ -5,8 +5,8 @@ const db = require('../db');
 // Get all plans
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM plans ORDER BY price_cents');
-    res.json(rows);
+    const result = await db.query('SELECT * FROM plans ORDER BY price_cents');
+    res.json(result.rows);
   } catch (error) {
     console.error('Error fetching plans:', error);
     res.status(500).json({ error: 'Database error' });
@@ -16,11 +16,11 @@ router.get('/', async (req, res) => {
 // Get plan by ID
 router.get('/:id', async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM plans WHERE id = ?', [req.params.id]);
-    if (rows.length === 0) {
+    const result = await db.query('SELECT * FROM plans WHERE id = $1', [req.params.id]);
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Plan not found' });
     }
-    res.json(rows[0]);
+    res.json(result.rows[0]);
   } catch (error) {
     console.error('Error fetching plan:', error);
     res.status(500).json({ error: 'Database error' });
@@ -31,12 +31,11 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { name, price_cents, interval = 'monthly', description = '' } = req.body;
-    const [result] = await db.query(
-      'INSERT INTO plans (name, price_cents, `interval`, description) VALUES (?, ?, ?, ?)',
+    const result = await db.query(
+      'INSERT INTO plans (name, price_cents, interval, description) VALUES ($1, $2, $3, $4) RETURNING *',
       [name, price_cents, interval, description]
     );
-    const [rows] = await db.query('SELECT * FROM plans WHERE id = ?', [result.insertId]);
-    res.status(201).json(rows[0]);
+    res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error creating plan:', error);
     res.status(500).json({ error: 'Database error' });
@@ -47,15 +46,14 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { name, price_cents, interval, description } = req.body;
-    await db.query(
-      'UPDATE plans SET name = ?, price_cents = ?, `interval` = ?, description = ? WHERE id = ?',
+    const result = await db.query(
+      'UPDATE plans SET name = $1, price_cents = $2, interval = $3, description = $4 WHERE id = $5 RETURNING *',
       [name, price_cents, interval, description, req.params.id]
     );
-    const [rows] = await db.query('SELECT * FROM plans WHERE id = ?', [req.params.id]);
-    if (rows.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Plan not found' });
     }
-    res.json(rows[0]);
+    res.json(result.rows[0]);
   } catch (error) {
     console.error('Error updating plan:', error);
     res.status(500).json({ error: 'Database error' });
@@ -65,8 +63,8 @@ router.put('/:id', async (req, res) => {
 // Delete plan
 router.delete('/:id', async (req, res) => {
   try {
-    const [result] = await db.query('DELETE FROM plans WHERE id = ?', [req.params.id]);
-    if (result.affectedRows === 0) {
+    const result = await db.query('DELETE FROM plans WHERE id = $1', [req.params.id]);
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Plan not found' });
     }
     res.json({ ok: true });
