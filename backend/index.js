@@ -12,17 +12,19 @@ app.use(express.json());
 // DB + routes
 const db = require('./src/db');
 const api = require('./src/routes');
+
+// API routes FIRST
 app.use('/api', api);
 
-// health check route
-app.get('/', (req, res) => {
+// health check (DO NOT use "/")
+app.get('/api/health', (req, res) => {
   res.json({ ok: true, msg: 'Netflix subscription API' });
 });
 
-// serve frontend build
+// serve React build (IMPORTANT)
 app.use(express.static(path.join(__dirname, '../frontend/build')));
 
-// catch-all (VERY IMPORTANT for React routing)
+// React fallback route (MUST be last)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
 });
