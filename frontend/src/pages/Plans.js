@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-const API = process.env.REACT_APP_API || 'http://localhost:4000/api';
+const API = process.env.REACT_APP_API ;
 
 // Static Netflix plans
 const staticPlans = [

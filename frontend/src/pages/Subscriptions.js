@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-const API = process.env.REACT_APP_API || 'http://localhost:4000/api';
+const API = process.env.REACT_APP_API;
 
 export default function Subs({ user }){
   const [subs,setSubs]=useState([]);
